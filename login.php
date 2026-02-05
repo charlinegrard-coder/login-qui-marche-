@@ -4,7 +4,7 @@ require_once "db.php";
 session_start();
 
 $pdo = new PDO(
-    "mysql:host=localhost;port=8889;dbname=blogart25;charset=utf8mb4",
+    "mysql:host=localhost;port=8889;dbname=BLOGART26;charset=utf8mb4",
     "root",
     "root",
     [
@@ -14,31 +14,36 @@ $pdo = new PDO(
 
 $error = "";
 
+
 if ($_SERVER["REQUEST_METHOD"] === "POST") {
 
     $pseudo = trim($_POST["pseudo"] ?? ""); //récupères ce que l'utilisateur a tapé + supp les espaces inutiles
-    $password = $_POST["password"] ?? ""; //pareil pour le mdp mais garde les espaces tapés
+    $password = $_POST["password"] ?? "";  //pareil pour le mdp mais garde les espaces tapés
+
 
     if ($pseudo === "" || $password === "") { //empêche d'envoyer un formulaire vide
         $error = "Tous les champs sont obligatoires.";
     } else {
-        $stmt = $pdo->prepare("SELECT id, password FROM users WHERE pseudo = ?");
+
+        $sql = "SELECT numMemb, passMemb FROM MEMBRE WHERE pseudoMemb = ?";
+        $stmt = $pdo->prepare($sql);
         $stmt->execute([$pseudo]);
         $user = $stmt->fetch(PDO::FETCH_ASSOC);
 
         if (!$user) {
-            $error = "Utilisateur introuvable.";
-        } elseif ($password !== $user["password"]) { //vérifie que l'utilisateur existe et que le mdp correspond A REMPLACER
+            $error = "Pseudo incorrect."; //vérifie que l'utilisateur existe et que le mdp correspond
+        } elseif ($password !== $user["passMemb"]) {
             $error = "Mot de passe incorrect.";
         } else {
-            $_SESSION["user_id"] = $user["id"]; //se souviens que l'utilisateur est co
+            $_SESSION["user_id"] = $user["numMemb"]; //se souviens que l'utilisateur est co
             $_SESSION["pseudo"] = $pseudo;
-            header("Location: dashboard.php"); 
+            header("Location: dashboard.php");
             exit;
         }
     }
 }
 ?>
+
 
 <!DOCTYPE html>
 <html lang="fr">
@@ -70,9 +75,11 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 
         <div class="form-options">
             <label>
-                <input type="checkbox"> Afficher le mot de passe
+                <input type="checkbox" id="showPassword" onclick="togglePassword()"> Afficher le mot de passe
             </label>
         </div>
+    
+
 
         <button type="submit">Se connecter</button><!-- bouton pour envoyer le formulaire -->
     </form>
@@ -88,28 +95,5 @@ function togglePassword() {
 
 </body>
 <link rel="stylesheet" href="style.css">
-
-<!--<div class="login-container">
-    <h1>Connexion</h1>
-
-    <?php if ($error): ?>
-        <div class="error"><?= htmlspecialchars($error) ?></div>
-    <?php endif; ?>
-
-    <form method="POST">
-        <label for="pseudo">Pseudo</label>
-        <input type="text" name="pseudo" id="pseudo" required>
-
-        <label for="password">Mot de passe</label>
-        <input type="password" name="password" id="password" required>
-
-        <button type="submit">Se connecter</button>
-    </form>
-
-    <p>
-        Pas de compte ?
-        <a href="register.php">Inscription</a>
-    </p>
-</div> -->
 
 </html>
